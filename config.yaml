@@ -1,0 +1,11 @@
+zap:
+  level: "info"
+  prefix: "log"
+  format: "console"
+  director: "./logs"
+  encode-level: "CapitalLevelEncoder"
+  stacktrace-key: "stacktrace"
+  show-line: true
+  log-in-console: true
+  retention-day: 7
+
