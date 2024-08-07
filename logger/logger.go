@@ -11,10 +11,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-// 定义全局变量
 var (
-	Logger        *zap.Logger
-	SugaredLogger *zap.SugaredLogger
+	sugaredLogger *zap.SugaredLogger
 )
 
 // ZapConfig holds the configuration for the logger
@@ -85,42 +83,40 @@ func (c *ZapConfig) CallerEncoder() zapcore.CallerEncoder {
 	}
 }
 
-// InitLoggerWithConfig initializes the logger by loading the configuration file
-func InitLoggerWithConfig(configFile string) (*zap.SugaredLogger, error) {
+// Init initializes the logger by loading the configuration file
+func Init(configFile string) error {
 	viper.SetConfigFile(configFile)
 
 	if err := viper.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("error reading config file: %v", err)
+		return fmt.Errorf("error reading config file: %v", err)
 	}
 
 	var zapConfig ZapConfig
 	if err := viper.UnmarshalKey("zap", &zapConfig); err != nil {
-		return nil, fmt.Errorf("error unmarshalling config to struct: %v", err)
+		return fmt.Errorf("error unmarshalling config to struct: %v", err)
 	}
 
-	return InitLogger(&zapConfig)
+	return initLogger(&zapConfig)
 }
 
-// InitLogger initializes the logger based on the given configuration
-func InitLogger(cfg *ZapConfig) (*zap.SugaredLogger, error) {
-	if ok, _ := PathExists(cfg.Director); !ok {
+// initLogger initializes the logger based on the given configuration
+func initLogger(cfg *ZapConfig) error {
+	if ok, _ := pathExists(cfg.Director); !ok {
 		fmt.Printf("create %v directory\n", cfg.Director)
 		err := os.Mkdir(cfg.Director, os.ModePerm)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create directory %s: %v", cfg.Director, err)
+			return fmt.Errorf("failed to create directory %s: %v", cfg.Director, err)
 		}
 	}
 
 	cores, err := setupCores(cfg)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	logger := zap.New(zapcore.NewTee(cores...), zap.AddCaller())
-	sugaredLogger := logger.Sugar()
-	Logger = logger
-	SugaredLogger = sugaredLogger
-	return sugaredLogger, nil
+	sugaredLogger = logger.Sugar()
+	return nil
 }
 
 // setupCores sets up the cores for different log levels
@@ -158,8 +154,8 @@ func getLogWriter(cfg *ZapConfig, filename string) (zapcore.WriteSyncer, error) 
 	return zapcore.AddSync(file), nil
 }
 
-// PathExists checks if a path exists
-func PathExists(path string) (bool, error) {
+// pathExists checks if a path exists
+func pathExists(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err == nil {
 		return true, nil
@@ -170,7 +166,52 @@ func PathExists(path string) (bool, error) {
 	return false, err
 }
 
-// GetLogger returns the global SugaredLogger instance
-func GetLogger() *zap.SugaredLogger {
-	return SugaredLogger
+// Info logs an info message
+func Info(args ...interface{}) {
+	sugaredLogger.Info(args...)
+}
+
+// Infof logs an info message with formatting
+func Infof(template string, args ...interface{}) {
+	sugaredLogger.Infof(template, args...)
+}
+
+// Error logs an error message
+func Error(args ...interface{}) {
+	sugaredLogger.Error(args...)
+}
+
+// Errorf logs an error message with formatting
+func Errorf(template string, args ...interface{}) {
+	sugaredLogger.Errorf(template, args...)
+}
+
+// Debug logs a debug message
+func Debug(args ...interface{}) {
+	sugaredLogger.Debug(args...)
+}
+
+// Debugf logs a debug message with formatting
+func Debugf(template string, args ...interface{}) {
+	sugaredLogger.Debugf(template, args...)
+}
+
+// Warn logs a warn message
+func Warn(args ...interface{}) {
+	sugaredLogger.Warn(args...)
+}
+
+// Warnf logs a warn message with formatting
+func Warnf(template string, args ...interface{}) {
+	sugaredLogger.Warnf(template, args...)
+}
+
+// Fatal logs a fatal message and exits
+func Fatal(args ...interface{}) {
+	sugaredLogger.Fatal(args...)
+}
+
+// Fatalf logs a fatal message with formatting and exits
+func Fatalf(template string, args ...interface{}) {
+	sugaredLogger.Fatalf(template, args...)
 }
