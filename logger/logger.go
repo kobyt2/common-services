@@ -98,6 +98,8 @@ func InitLogger(configFile string) error {
         return fmt.Errorf("error unmarshalling config to struct: %v", err)
     }
 
+    fmt.Printf("Loaded config: %+v\n", zapConfig) // 输出加载的配置
+
     if ok, _ := PathExists(zapConfig.Director); !ok {
         fmt.Printf("create %v directory\n", zapConfig.Director)
         if err := os.Mkdir(zapConfig.Director, os.ModePerm); err != nil {
@@ -112,8 +114,10 @@ func InitLogger(configFile string) error {
 
     Logger = zap.New(zapcore.NewTee(cores...), zap.AddCaller())
     SugaredLogger = Logger.Sugar()
+    fmt.Println("Logger initialized successfully") // 确认初始化成功
     return nil
 }
+
 
 // setupCores sets up the cores for different log levels
 func setupCores(cfg *ZapConfig) ([]zapcore.Core, error) {
