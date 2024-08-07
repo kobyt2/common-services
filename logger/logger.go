@@ -15,22 +15,20 @@ import (
 var (
 	Logger        *zap.Logger
 	SugaredLogger *zap.SugaredLogger
-	globalZapConfig AppZapConfig
 )
 
 // ZapConfig holds the configuration for the logger
 type ZapConfig struct {
-	Level         string `mapstructure:"level" json:"level" yaml:"level"`
-	Prefix        string `mapstructure:"prefix" json:"prefix" yaml:"prefix"`
-	Format        string `mapstructure:"format" json:"format" yaml:"format"`
-	Director      string `mapstructure:"director" json:"director" yaml:"director"`
-	EncodeLevel   string `mapstructure:"encode-level" json:"encode-level" yaml:"encode-level"`
-	StacktraceKey string `mapstructure:"stacktrace-key" json:"stacktrace-key" yaml:"stacktrace-key"`
-	ShowLine      bool   `mapstructure:"show-line" json:"show-line" yaml:"show-line"`
-	LogInConsole  bool   `mapstructure:"log-in-console" json:"log-in-console" yaml:"log-in-console"`
-	RetentionDay  int    `mapstructure:"retention-day" json:"retention-day" yaml:"retention-day"`
+	Level              string `mapstructure:"level" json:"level" yaml:"level"`
+	Prefix             string `mapstructure:"prefix" json:"prefix" yaml:"prefix"`
+	Format             string `mapstructure:"format" json:"format" yaml:"format"`
+	Director           string `mapstructure:"director" json:"director" yaml:"director"`
+	EncodeLevel        string `mapstructure:"encode-level" json:"encode-level" yaml:"encode-level"`
+	StacktraceKey      string `mapstructure:"stacktrace-key" json:"stacktrace-key" yaml:"stacktrace-key"`
+	ShowLine           bool   `mapstructure:"show-line" json:"show-line" yaml:"show-line"`
+	LogInConsole       bool   `mapstructure:"log-in-console" json:"log-in-console" yaml:"log-in-console"`
+	RetentionDay       int    `mapstructure:"retention-day" json:"retention-day" yaml:"retention-day"`
 	CustomLevelEncoder bool   `mapstructure:"custom-level-encoder" json:"custom-level-encoder" yaml:"custom-level-encoder"`
-
 }
 
 // EncoderConfig returns the encoder configuration based on the ZapConfig
@@ -53,41 +51,25 @@ func (c *ZapConfig) EncoderConfig() zapcore.EncoderConfig {
 
 // LevelEncoder returns the level encoder based on the ZapConfig
 func (c *ZapConfig) LevelEncoder() zapcore.LevelEncoder {
-    if c.CustomLevelEncoder {
-        return func(level zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
-            enc.AppendString(fmt.Sprintf("[%s]", level.CapitalString()))
-        }
-    }
+	if c.CustomLevelEncoder {
+		return func(level zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
+			enc.AppendString(fmt.Sprintf("[%s]", level.CapitalString()))
+		}
+	}
 
-    switch c.EncodeLevel {
-    case "lowercase":
-        return zapcore.LowercaseLevelEncoder
-    case "capital":
-        return zapcore.CapitalLevelEncoder
-    case "lowercaseColor":
-        return zapcore.LowercaseColorLevelEncoder
-    case "capitalColor":
-        return zapcore.CapitalColorLevelEncoder
-    default:
-        return zapcore.CapitalLevelEncoder
-    }
+	switch c.EncodeLevel {
+	case "lowercase":
+		return zapcore.LowercaseLevelEncoder
+	case "capital":
+		return zapcore.CapitalLevelEncoder
+	case "lowercaseColor":
+		return zapcore.LowercaseColorLevelEncoder
+	case "capitalColor":
+		return zapcore.CapitalColorLevelEncoder
+	default:
+		return zapcore.CapitalLevelEncoder
+	}
 }
-
-func (c *ZapConfig) LevelEncoder() zapcore.LevelEncoder {
-    switch c.EncodeLevel {
-    case "lowercase":
-        return zapcore.LowercaseLevelEncoder
-    case "capital":
-        return zapcore.CapitalLevelEncoder
-    case "lowercaseColor":
-        return zapcore.LowercaseColorLevelEncoder
-    case "capitalColor":
-        return zapcore.CapitalColorLevelEncoder
-    default:
-        return zapcore.CapitalLevelEncoder
-    }
-}
-
 
 // TimeEncoder returns the time encoder based on the ZapConfig
 func (c *ZapConfig) TimeEncoder() zapcore.TimeEncoder {
@@ -103,48 +85,42 @@ func (c *ZapConfig) CallerEncoder() zapcore.CallerEncoder {
 	}
 }
 
-// AppZapConfig holds the application-specific Zap configuration
-type AppZapConfig struct {
-	Zap ZapConfig `mapstructure:"zap"`
-}
-
-
 // InitLoggerWithConfig initializes the logger by loading the configuration file
 func InitLoggerWithConfig(configFile string) (*zap.SugaredLogger, error) {
-    viper.SetConfigFile(configFile)
+	viper.SetConfigFile(configFile)
 
-    if err := viper.ReadInConfig(); err != nil {
-        return nil, fmt.Errorf("error reading config file: %v", err)
-    }
+	if err := viper.ReadInConfig(); err != nil {
+		return nil, fmt.Errorf("error reading config file: %v", err)
+	}
 
-    var zapConfig ZapConfig
-    if err := viper.UnmarshalKey("zap", &zapConfig); err != nil {
-        return nil, fmt.Errorf("error unmarshalling config to struct: %v", err)
-    }
+	var zapConfig ZapConfig
+	if err := viper.UnmarshalKey("zap", &zapConfig); err != nil {
+		return nil, fmt.Errorf("error unmarshalling config to struct: %v", err)
+	}
 
-    return InitLogger(&zapConfig)
+	return InitLogger(&zapConfig)
 }
 
 // InitLogger initializes the logger based on the given configuration
 func InitLogger(cfg *ZapConfig) (*zap.SugaredLogger, error) {
-    if ok, _ := PathExists(cfg.Director); !ok {
-        fmt.Printf("create %v directory\n", cfg.Director)
-        err := os.Mkdir(cfg.Director, os.ModePerm)
-        if err != nil {
-            return nil, fmt.Errorf("failed to create directory %s: %v", cfg.Director, err)
-        }
-    }
+	if ok, _ := PathExists(cfg.Director); !ok {
+		fmt.Printf("create %v directory\n", cfg.Director)
+		err := os.Mkdir(cfg.Director, os.ModePerm)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create directory %s: %v", cfg.Director, err)
+		}
+	}
 
-    cores, err := setupCores(cfg)
-    if err != nil {
-        return nil, err
-    }
+	cores, err := setupCores(cfg)
+	if err != nil {
+		return nil, err
+	}
 
-    logger := zap.New(zapcore.NewTee(cores...), zap.AddCaller())
-    sugaredLogger := logger.Sugar()
-    Logger = logger
-    SugaredLogger = sugaredLogger
-    return sugaredLogger, nil
+	logger := zap.New(zapcore.NewTee(cores...), zap.AddCaller())
+	sugaredLogger := logger.Sugar()
+	Logger = logger
+	SugaredLogger = sugaredLogger
+	return sugaredLogger, nil
 }
 
 // setupCores sets up the cores for different log levels
@@ -198,4 +174,3 @@ func PathExists(path string) (bool, error) {
 func GetLogger() *zap.SugaredLogger {
 	return SugaredLogger
 }
-
