@@ -8,4 +8,4 @@ zap:
   show-line: true
   log-in-console: true
   retention-day: 7
-
+  custom-level-encoder: true
