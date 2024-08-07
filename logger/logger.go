@@ -108,26 +108,43 @@ type AppZapConfig struct {
 	Zap ZapConfig `mapstructure:"zap"`
 }
 
+
+// InitLoggerWithConfig initializes the logger by loading the configuration file
+func InitLoggerWithConfig(configFile string) (*zap.SugaredLogger, error) {
+    viper.SetConfigFile(configFile)
+
+    if err := viper.ReadInConfig(); err != nil {
+        return nil, fmt.Errorf("error reading config file: %v", err)
+    }
+
+    var zapConfig ZapConfig
+    if err := viper.UnmarshalKey("zap", &zapConfig); err != nil {
+        return nil, fmt.Errorf("error unmarshalling config to struct: %v", err)
+    }
+
+    return InitLogger(&zapConfig)
+}
+
 // InitLogger initializes the logger based on the given configuration
 func InitLogger(cfg *ZapConfig) (*zap.SugaredLogger, error) {
-	if ok, _ := PathExists(cfg.Director); !ok {
-		fmt.Printf("create %v directory\n", cfg.Director)
-		err := os.Mkdir(cfg.Director, os.ModePerm)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create directory %s: %v", cfg.Director, err)
-		}
-	}
+    if ok, _ := PathExists(cfg.Director); !ok {
+        fmt.Printf("create %v directory\n", cfg.Director)
+        err := os.Mkdir(cfg.Director, os.ModePerm)
+        if err != nil {
+            return nil, fmt.Errorf("failed to create directory %s: %v", cfg.Director, err)
+        }
+    }
 
-	cores, err := setupCores(cfg)
-	if err != nil {
-		return nil, err
-	}
+    cores, err := setupCores(cfg)
+    if err != nil {
+        return nil, err
+    }
 
-	logger := zap.New(zapcore.NewTee(cores...), zap.AddCaller())
-	sugaredLogger := logger.Sugar()
-	Logger = logger
-	SugaredLogger = sugaredLogger
-	return sugaredLogger, nil
+    logger := zap.New(zapcore.NewTee(cores...), zap.AddCaller())
+    sugaredLogger := logger.Sugar()
+    Logger = logger
+    SugaredLogger = sugaredLogger
+    return sugaredLogger, nil
 }
 
 // setupCores sets up the cores for different log levels
