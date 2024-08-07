@@ -162,7 +162,58 @@ func PathExists(path string) (bool, error) {
     return false, err
 }
 
-// GetLogger returns the global SugaredLogger instance
-func GetLogger() *zap.SugaredLogger {
-    return SugaredLogger
+func Debug(args ...interface{}) {
+    SugaredLogger.Debug(args...)
+}
+
+func Debugf(template string, args ...interface{}) {
+    SugaredLogger.Debugf(template, args...)
+}
+
+func Info(args ...interface{}) {
+    SugaredLogger.Info(args...)
+}
+
+func Infof(template string, args ...interface{}) {
+    SugaredLogger.Infof(template, args...)
+}
+
+func Warn(args ...interface{}) {
+    SugaredLogger.Warn(args...)
+}
+
+func Warnf(template string, args ...interface{}) {
+    SugaredLogger.Warnf(template, args...)
+}
+
+func Error(args ...interface{}) {
+    SugaredLogger.Error(args...)
+}
+
+func Errorf(template string, args ...interface{}) {
+    SugaredLogger.Errorf(template, args...)
+}
+
+func DPanic(args ...interface{}) {
+    SugaredLogger.DPanic(args...)
+}
+
+func DPanicf(template string, args ...interface{}) {
+    SugaredLogger.DPanicf(template, args...)
+}
+
+func Panic(args ...interface{}) {
+    SugaredLogger.Panic(args...)
+}
+
+func Panicf(template string, args ...interface{}) {
+    SugaredLogger.Panicf(template, args...)
+}
+
+func Fatal(args ...interface{}) {
+    SugaredLogger.Fatal(args...)
+}
+
+func Fatalf(template string, args ...interface{}) {
+    SugaredLogger.Fatalf(template, args...)
 }
