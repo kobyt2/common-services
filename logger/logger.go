@@ -29,6 +29,8 @@ type ZapConfig struct {
 	ShowLine      bool   `mapstructure:"show-line" json:"show-line" yaml:"show-line"`
 	LogInConsole  bool   `mapstructure:"log-in-console" json:"log-in-console" yaml:"log-in-console"`
 	RetentionDay  int    `mapstructure:"retention-day" json:"retention-day" yaml:"retention-day"`
+	CustomLevelEncoder bool   `mapstructure:"custom-level-encoder" json:"custom-level-encoder" yaml:"custom-level-encoder"`
+
 }
 
 // EncoderConfig returns the encoder configuration based on the ZapConfig
@@ -51,10 +53,41 @@ func (c *ZapConfig) EncoderConfig() zapcore.EncoderConfig {
 
 // LevelEncoder returns the level encoder based on the ZapConfig
 func (c *ZapConfig) LevelEncoder() zapcore.LevelEncoder {
-	return func(level zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
-		enc.AppendString(fmt.Sprintf("[%s]", level.CapitalString()))
-	}
+    if c.CustomLevelEncoder {
+        return func(level zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
+            enc.AppendString(fmt.Sprintf("[%s]", level.CapitalString()))
+        }
+    }
+
+    switch c.EncodeLevel {
+    case "lowercase":
+        return zapcore.LowercaseLevelEncoder
+    case "capital":
+        return zapcore.CapitalLevelEncoder
+    case "lowercaseColor":
+        return zapcore.LowercaseColorLevelEncoder
+    case "capitalColor":
+        return zapcore.CapitalColorLevelEncoder
+    default:
+        return zapcore.CapitalLevelEncoder
+    }
 }
+
+func (c *ZapConfig) LevelEncoder() zapcore.LevelEncoder {
+    switch c.EncodeLevel {
+    case "lowercase":
+        return zapcore.LowercaseLevelEncoder
+    case "capital":
+        return zapcore.CapitalLevelEncoder
+    case "lowercaseColor":
+        return zapcore.LowercaseColorLevelEncoder
+    case "capitalColor":
+        return zapcore.CapitalColorLevelEncoder
+    default:
+        return zapcore.CapitalLevelEncoder
+    }
+}
+
 
 // TimeEncoder returns the time encoder based on the ZapConfig
 func (c *ZapConfig) TimeEncoder() zapcore.TimeEncoder {
