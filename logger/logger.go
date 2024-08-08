@@ -3,6 +3,7 @@ package logger
 import (
 	"fmt"
 	"github.com/spf13/viper"
+	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"
@@ -27,7 +28,7 @@ type ZapConfig struct {
 	ShowLine           bool   `mapstructure:"show-line" json:"show-line" yaml:"show-line"`
 	LogInConsole       bool   `mapstructure:"log-in-console" json:"log-in-console" yaml:"log-in-console"`
 	RetentionDay       int    `mapstructure:"retention-day" json:"retention-day" yaml:"retention-day"`
-	CustomLevelEncoder bool   `mapstructure:"custom-level-encoder" json:"custom-level-encoder" yaml:"custom-level-encoder"` // New field
+	CustomLevelEncoder bool   `mapstructure:"custom-level-encoder" json:"custom-level-encoder"` // New field
 }
 
 // EncoderConfig returns the encoder configuration based on the ZapConfig
@@ -130,7 +131,7 @@ func setupCores(cfg *ZapConfig) ([]zapcore.Core, error) {
 		encoder = zapcore.NewConsoleEncoder(encoderConfig)
 	}
 	for _, level := range levels {
-		writer, err := getLogWriter(cfg, level.String()+".log")
+		writer, err := getLogWriter(cfg, level.String())
 		if err != nil {
 			return nil, fmt.Errorf("failed to create log file for level %s: %v", level.String(), err)
 		}
@@ -143,14 +144,19 @@ func setupCores(cfg *ZapConfig) ([]zapcore.Core, error) {
 }
 
 // getLogWriter creates a WriteSyncer for the given file
-func getLogWriter(cfg *ZapConfig, filename string) (zapcore.WriteSyncer, error) {
-	filepath := filepath.Join(cfg.Director, filename)
-	file, err := os.OpenFile(filepath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return nil, err
+func getLogWriter(cfg *ZapConfig, level string) (zapcore.WriteSyncer, error) {
+	timestamp := time.Now().Format("2006010215")
+	filepath := filepath.Join(cfg.Director, fmt.Sprintf("%s_%s.log", level, timestamp))
+	lumberJackLogger := &lumberjack.Logger{
+		Filename:   filepath,
+		MaxSize:    1, // 每个日志文件最大 1 MB
+		MaxBackups: 24, // 最多保存 24 个备份文件
+		MaxAge:     cfg.RetentionDay, // 最多保存 cfg.RetentionDay 天的日志文件
+		Compress:   true, // 压缩旧日志文件
 	}
-	return zapcore.AddSync(file), nil
+	return zapcore.AddSync(lumberJackLogger), nil
 }
+
 
 // PathExists checks if a path exists
 func PathExists(path string) (bool, error) {
