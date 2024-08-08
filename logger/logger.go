@@ -85,38 +85,72 @@ func (c *ZapConfig) CallerEncoder() zapcore.CallerEncoder {
 	}
 }
 
-// InitLogger initializes the logger based on the configuration file path
 func InitLogger(configFile string) error {
+	// 设置配置文件路径
 	viper.SetConfigFile(configFile)
 
+	// 尝试读取配置文件
 	if err := viper.ReadInConfig(); err != nil {
-		return fmt.Errorf("error reading config file: %v", err)
+		fmt.Println("Config file not found, using default values.")
+		// 使用默认值
+		defaultConfig := getDefaultConfig()
+		cores, err := setupCores(&defaultConfig)
+		if err != nil {
+			return fmt.Errorf("failed to set up cores with default config: %v", err)
+		}
+
+		Logger = zap.New(zapcore.NewTee(cores...), zap.AddCaller())
+		SugaredLogger = Logger.Sugar()
+		fmt.Println("Logger initialized successfully with default values")
+		return nil
 	}
 
+	// 读取配置文件成功，解码配置
 	var zapConfig ZapConfig
 	if err := viper.UnmarshalKey("zap", &zapConfig); err != nil {
 		return fmt.Errorf("error unmarshalling config to struct: %v", err)
 	}
 
-	fmt.Printf("Loaded config: %+v\n", zapConfig) // 输出加载的配置
+	fmt.Printf("Loaded config: %+v\n", zapConfig)
 
+	// 确保日志目录存在
 	if ok, _ := PathExists(zapConfig.Director); !ok {
-		fmt.Printf("create %v directory\n", zapConfig.Director)
+		fmt.Printf("Creating %v directory\n", zapConfig.Director)
 		if err := os.Mkdir(zapConfig.Director, os.ModePerm); err != nil {
 			return fmt.Errorf("failed to create directory %s: %v", zapConfig.Director, err)
 		}
 	}
 
+	// 设置日志核心
 	cores, err := setupCores(&zapConfig)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to set up cores with provided config: %v", err)
 	}
 
+	// 初始化 Logger
 	Logger = zap.New(zapcore.NewTee(cores...), zap.AddCaller())
 	SugaredLogger = Logger.Sugar()
-	fmt.Println("Logger initialized successfully") // 确认初始化成功
+
+	fmt.Println("Logger initialized successfully")
 	return nil
 }
+
+
+// getDefaultConfig returns a ZapConfig with default values
+func getDefaultConfig() ZapConfig {
+	return ZapConfig{
+		Level:        "info",
+		Prefix:       "[LOGGER]",
+		Format:       "json",
+		Director:     "./logs",
+		EncodeLevel:  "capital",
+		StacktraceKey: "stacktrace",
+		ShowLine:     true,
+		LogInConsole: true,
+		RetentionDay:  7,
+	}
+}
+
 
 // setupCores sets up the cores for different log levels
 func setupCores(cfg *ZapConfig) ([]zapcore.Core, error) {
