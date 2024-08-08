@@ -3,8 +3,6 @@ module github.com/kobyt2/go-zap-logger
 
 go 1.22.0
 
-require github.com/kobyt2/go-zap-logger v0.0.0-20240807105045-bb1a4865e4d7
-
 require (
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
