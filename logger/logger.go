@@ -128,7 +128,9 @@ func InitLogger(configFile string) error {
 	}
 
 	// 初始化 Logger
-	Logger = zap.New(zapcore.NewTee(cores...), zap.AddCaller())
+	//Logger = zap.New(zapcore.NewTee(cores...), zap.AddCaller())
+	//zap.AddCallerSkip(1) 会让 zap 在记录 caller 信息时跳过一层栈帧，从而显示出你业务代码中调用 logger.Debug() 或其他日志函数的正确位置
+	Logger = zap.New(zapcore.NewTee(cores...), zap.AddCaller(), zap.AddCallerSkip(1))
 	SugaredLogger = Logger.Sugar()
 
 	fmt.Println("Logger initialized successfully")
