@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"context"
 	"fmt"
 	"github.com/spf13/viper"
 	"github.com/natefinch/lumberjack"
@@ -9,13 +10,77 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	"gorm.io/gorm/logger"
+	"gorm.io/gorm"
 )
+
+// GormLogger 定义一个 GORM 自定义日志结构体
+type GormLogger struct {
+	zapLogger *zap.Logger
+	config    logger.Config
+}
 
 // Define global variables
 var (
 	Logger        *zap.Logger
 	SugaredLogger *zap.SugaredLogger
 )
+
+// NewGormLogger 创建一个新的 GormLogger 实例
+func NewGormLogger(zapLogger *zap.Logger) GormLogger {
+	return GormLogger{
+		zapLogger: zapLogger,
+		config: logger.Config{
+			SlowThreshold:             200 * time.Millisecond, // 慢查询的阈值
+			LogLevel:                  logger.Warn,            // 默认日志级别
+			IgnoreRecordNotFoundError: false,                  // 忽略没有找到记录的错误
+			Colorful:                  false,                  // 禁用彩色打印
+		},
+	}
+}
+
+// LogMode 设置日志级别
+func (l GormLogger) LogMode(level logger.LogLevel) logger.Interface {
+	newlogger := l
+	newlogger.config.LogLevel = level
+	return newlogger
+}
+
+// Info 实现 gorm.Logger 的 Info 方法
+func (l GormLogger) Info(ctx context.Context, s string, i ...interface{}) {
+	if l.config.LogLevel >= logger.Info {
+		l.zapLogger.Sugar().Infof(s, i...)
+	}
+}
+
+// Warn 实现 gorm.Logger 的 Warn 方法
+func (l GormLogger) Warn(ctx context.Context, s string, i ...interface{}) {
+	if l.config.LogLevel >= logger.Warn {
+		l.zapLogger.Sugar().Warnf(s, i...)
+	}
+}
+
+// Error 实现 gorm.Logger 的 Error 方法
+func (l GormLogger) Error(ctx context.Context, s string, i ...interface{}) {
+	if l.config.LogLevel >= logger.Error {
+		l.zapLogger.Sugar().Errorf(s, i...)
+	}
+}
+
+// Trace 实现 gorm.Logger 的 Trace 方法
+func (l GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
+	if l.config.LogLevel > 0 {
+		elapsed := time.Since(begin)
+		sql, rows := fc()
+		if err != nil {
+			l.zapLogger.Sugar().Errorf("[%.3fms] [rows:%v] %s", float64(elapsed.Nanoseconds())/1e6, rows, sql)
+		} else if elapsed > l.config.SlowThreshold && l.config.SlowThreshold != 0 {
+			l.zapLogger.Sugar().Warnf("[%.3fms] [rows:%v] %s", float64(elapsed.Nanoseconds())/1e6, rows, sql)
+		} else {
+			l.zapLogger.Sugar().Debugf("[%.3fms] [rows:%v] %s", float64(elapsed.Nanoseconds())/1e6, rows, sql)
+		}
+	}
+}
 
 // ZapConfig holds the configuration for the logger
 type ZapConfig struct {
