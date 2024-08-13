@@ -84,16 +84,16 @@ func (l GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (strin
 
 // ZapConfig holds the configuration for the logger
 type ZapConfig struct {
-	Level              string `mapstructure:"level" json:"level" yaml:"level"`
-	Prefix             string `mapstructure:"prefix" json:"prefix" yaml:"prefix"`
-	Format             string `mapstructure:"format" json:"format" yaml:"format"`
-	Director           string `mapstructure:"director" json:"director" yaml:"director"`
-	EncodeLevel        string `mapstructure:"encode-level" json:"encode-level" yaml:"encode-level"`
-	StacktraceKey      string `mapstructure:"stacktrace-key" json:"stacktrace-key" yaml:"stacktrace-key"`
-	ShowLine           bool   `mapstructure:"show-line" json:"show-line" yaml:"show-line"`
-	LogInConsole       bool   `mapstructure:"log-in-console" json:"log-in-console" yaml:"log-in-console"`
-	RetentionDay       int    `mapstructure:"retention-day" json:"retention-day" yaml:"retention-day"`
-	CustomLevelEncoder bool   `mapstructure:"custom-level-encoder" json:"custom-level-encoder"` // New field
+	Level              string mapstructure:"level" json:"level" yaml:"level"
+	Prefix             string mapstructure:"prefix" json:"prefix" yaml:"prefix"
+	Format             string mapstructure:"format" json:"format" yaml:"format"
+	Director           string mapstructure:"director" json:"director" yaml:"director"
+	EncodeLevel        string mapstructure:"encode-level" json:"encode-level" yaml:"encode-level"
+	StacktraceKey      string mapstructure:"stacktrace-key" json:"stacktrace-key" yaml:"stacktrace-key"
+	ShowLine           bool   mapstructure:"show-line" json:"show-line" yaml:"show-line"
+	LogInConsole       bool   mapstructure:"log-in-console" json:"log-in-console" yaml:"log-in-console"
+	RetentionDay       int    mapstructure:"retention-day" json:"retention-day" yaml:"retention-day"
+	CustomLevelEncoder bool   mapstructure:"custom-level-encoder" json:"custom-level-encoder" // New field
 }
 
 // EncoderConfig returns the encoder configuration based on the ZapConfig
