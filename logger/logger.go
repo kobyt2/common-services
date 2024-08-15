@@ -11,9 +11,7 @@ import (
 	"path/filepath"
 	"time"
 	"gorm.io/gorm/logger"
-	"gorm.io/gorm"
 )
-
 // GormLogger 定义一个 GORM 自定义日志结构体
 type GormLogger struct {
 	zapLogger *zap.Logger
