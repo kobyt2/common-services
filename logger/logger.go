@@ -26,15 +26,18 @@ var (
 
 // NewGormLogger 创建一个新的 GormLogger 实例
 func NewGormLogger(zapLogger *zap.Logger) GormLogger {
-	return GormLogger{
-		zapLogger: zapLogger,
-		config: logger.Config{
-			SlowThreshold:             200 * time.Millisecond, // 慢查询的阈值
-			LogLevel:                  logger.Warn,            // 默认日志级别
-			IgnoreRecordNotFoundError: false,                  // 忽略没有找到记录的错误
-			Colorful:                  false,                  // 禁用彩色打印
-		},
-	}
+    if zapLogger == nil {
+        panic("zapLogger is nil")
+    }
+    return GormLogger{
+        zapLogger: zapLogger,
+        config: logger.Config{
+            SlowThreshold:             200 * time.Millisecond, // 慢查询的阈值
+            LogLevel:                  logger.Warn,            // 默认日志级别
+            IgnoreRecordNotFoundError: false,                  // 忽略没有找到记录的错误
+            Colorful:                  false,                  // 禁用彩色打印
+        },
+    }
 }
 
 // LogMode 设置日志级别
