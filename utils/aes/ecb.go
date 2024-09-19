@@ -1,3 +1,6 @@
+package aes
+
+
 type CryptoDB struct {
 	block cipher.Block
 }
