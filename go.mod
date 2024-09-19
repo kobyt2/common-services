@@ -1,4 +1,4 @@
-module github.com/kobyt2/go-zap-logger
+module github.com/kobyt2/common-services
 
 
 go 1.22.0
