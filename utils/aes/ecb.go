@@ -1,5 +1,12 @@
 package aes
 
+import (
+	"crypto/aes"
+	"crypto/cipher"
+	"encoding/base64"
+	"strings"
+)
+
 
 type CryptoDB struct {
 	block cipher.Block
