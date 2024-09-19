@@ -7,8 +7,8 @@ type CryptoDB struct {
 
 // NewCryptoDB 创建新的 CryptoDB 实例并初始化 AES 加密块
 func NewCryptoDB(key string) *CryptoDB {
-	key := []byte(key)
-	block, err := aes.NewCipher(key)
+	keyBytes := []byte(key) // 修改这里，使用 keyBytes 避免与参数名冲突
+	block, err := aes.NewCipher(keyBytes)
 	if err != nil {
 		panic(err)
 	}
