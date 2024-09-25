@@ -10,4 +10,4 @@ go get github.com/kobyt2/common-services/logger
 采用对称加密aes的ecb,cbc模式来进行加密
 
 # bcrypt
-采用 bcrypt 的方式来加密密码和手机号等
+采用 bcrypt 的方式来加密密码和手机号等代替MD5、SHA256
